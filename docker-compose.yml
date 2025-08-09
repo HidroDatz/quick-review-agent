@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/postgres
+      GITLAB_URL: https://gitlab.com
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db

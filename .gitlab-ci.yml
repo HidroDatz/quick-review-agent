@@ -1,0 +1,33 @@
+stages:
+  - lint
+  - type
+  - test
+  - guard
+
+lint:
+  stage: lint
+  image: python:3.11
+  script:
+    - pip install -r requirements.txt
+    - flake8 app
+
+mypy:
+  stage: type
+  image: python:3.11
+  script:
+    - pip install -r requirements.txt
+    - mypy app
+
+pytest:
+  stage: test
+  image: python:3.11
+  script:
+    - pip install -r requirements.txt
+    - pytest --cov=app --cov-report=term-missing
+
+template_guard:
+  stage: guard
+  image: python:3.11
+  script:
+    - pip install -r requirements.txt
+    - python scripts/check_mr_template.py .gitlab/merge_request_templates/Code_Review_EN.md
