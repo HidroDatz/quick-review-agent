@@ -1,0 +1,10 @@
+[run]
+omit =
+    app/main.py
+    app/config.py
+    app/models/*
+    app/routers/*
+    app/utils/logging.py
+    app/utils/idempotency.py
+    app/services/gitlab_client.py
+    app/services/review_service.py
