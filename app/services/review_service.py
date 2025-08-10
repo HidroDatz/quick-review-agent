@@ -14,7 +14,6 @@ from ..utils.json_validator import ModelResponse, validate_json
 from .dedupe import dedupe_key
 from ..config import settings
 
-
 FINDINGS_STORE: Dict[Tuple[int, int], List[dict]] = {}
 
 

@@ -12,6 +12,7 @@ from app.config import settings  # noqa: E402
 from app.models import db_models  # noqa: E402
 
 
+
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
