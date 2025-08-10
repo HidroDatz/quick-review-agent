@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
 from ..services.review_service import trigger_review, get_current_findings
 
@@ -11,8 +11,10 @@ class RunReviewRequest(BaseModel):
 
 
 @router.post("/reviews/run")
-async def run_review(body: RunReviewRequest):
-    await trigger_review(body.project_id, body.mr_iid)
+async def run_review(body: RunReviewRequest, background_tasks: BackgroundTasks):
+    """Schedule a review run in the background."""
+
+    background_tasks.add_task(trigger_review, body.project_id, body.mr_iid)
     return {"status": "queued"}
 
 

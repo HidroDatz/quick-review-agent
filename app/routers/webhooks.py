@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Header, HTTPException
+from fastapi import APIRouter, Request, Header, HTTPException, BackgroundTasks
 import structlog
 from ..services.review_service import trigger_review
 from ..config import settings
@@ -7,7 +7,13 @@ router = APIRouter()
 
 
 @router.post("/gitlab/webhook")
-async def gitlab_webhook(request: Request, x_gitlab_token: str = Header(None)):
+async def gitlab_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    x_gitlab_token: str = Header(None),
+):
+    """Handle GitLab webhook events and queue reviews in the background."""
+
     if x_gitlab_token != settings.webhook_secret:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -18,7 +24,7 @@ async def gitlab_webhook(request: Request, x_gitlab_token: str = Header(None)):
         if action in {"open", "update"}:
             project_id = payload["project"]["id"]
             mr_iid = payload["object_attributes"]["iid"]
-            await trigger_review(project_id, mr_iid)
+            background_tasks.add_task(trigger_review, project_id, mr_iid)
 
     elif (
         payload.get("object_kind") == "note"
@@ -26,6 +32,6 @@ async def gitlab_webhook(request: Request, x_gitlab_token: str = Header(None)):
     ):
         project_id = payload["project"]["id"]
         mr_iid = payload["merge_request"]["iid"]
-        await trigger_review(project_id, mr_iid)
+        background_tasks.add_task(trigger_review, project_id, mr_iid)
 
-    return {"status": "ok"}
+    return {"status": "accepted"}
