@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Column, JSON
 
 
 class User(SQLModel, table=True):
@@ -30,7 +31,7 @@ class MRSnapshot(SQLModel, table=True):
     head_sha: str
     base_sha: str
     description_hash: str
-    languages: List[str] = Field(sa_column_kwargs={"type_": "JSONB"})
+    languages: List[str] = Field(sa_column=Column(JSON))
     risk_level: str
     created_at: datetime
     mr: MergeRequest = Relationship(back_populates="snapshots")
@@ -84,8 +85,8 @@ class FindingToUserIssue(SQLModel, table=True):
 class MRMetrics(SQLModel, table=True):
     mr_id: int = Field(foreign_key="mergerequest.id", primary_key=True)
     snapshot_id: int = Field(foreign_key="mrsnapshot.id", primary_key=True)
-    counts_by_severity: dict
-    counts_by_category: dict
+    counts_by_severity: dict = Field(sa_column=Column(JSON))
+    counts_by_category: dict = Field(sa_column=Column(JSON))
     open_count: int
     resolved_count: int
     avg_time_to_resolve_hours: float
@@ -98,4 +99,4 @@ class UserMetricsDaily(SQLModel, table=True):
     introduced_findings: int
     resolved_findings: int
     median_ttr_hours: float
-    top_issue_keys: dict
+    top_issue_keys: dict = Field(sa_column=Column(JSON))

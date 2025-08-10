@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Request, Header
-import structlog
 from ..services.review_service import trigger_review
 
 router = APIRouter()
