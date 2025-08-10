@@ -5,9 +5,14 @@ structlog
 sqlmodel
 alembic
 pydantic-settings
+psycopg[binary]
 pytest
 pytest-cov
+pytest-asyncio
+
 pyyaml
 flake8
 mypy
 types-PyYAML
+openai
+

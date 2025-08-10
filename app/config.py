@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     gitlab_token: str = ""
     webhook_secret: str = ""
     model_name: str = "qwen-coder"
+    openai_base_url: str = ""
+    openai_api_key: str = ""
 
     class Config:
         env_file = ".env"

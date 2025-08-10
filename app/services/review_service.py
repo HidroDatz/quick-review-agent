@@ -1,38 +1,74 @@
 """Service orchestrating code reviews."""
 from __future__ import annotations
+
 import json
 from typing import Dict, Tuple, List
+
+from openai import AsyncOpenAI
+from pydantic import ValidationError
+
 from .template_parser import parse_description
 from .diff_chunker import chunk_diff
 from .prompt_builder import build_prompt
-from ..utils.json_validator import validate_json
+from ..utils.json_validator import ModelResponse, validate_json
 from .dedupe import dedupe_key
+from ..config import settings
 
 FINDINGS_STORE: Dict[Tuple[int, int], List[dict]] = {}
 
 
-async def call_model(system_prompt: str, user_prompt: str) -> dict:
-    """Stub model call returning empty findings."""
-    # In production, call Qwen-Coder here.
-    return {"findings": [], "confidence": 1.0}
+async def call_model(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    client: AsyncOpenAI | None = None,
+) -> ModelResponse:
+    """Call OpenAI model and return validated JSON response.
+
+    Retries once if the model response fails validation.
+    """
+
+    client = client or AsyncOpenAI(
+        api_key=settings.openai_api_key, base_url=settings.openai_base_url
+    )
+
+    for _ in range(2):  # initial try + one retry
+        response = await client.chat.completions.create(
+            model=settings.model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
+        content = response.choices[0].message.content or "{}"
+        try:
+            return validate_json(content)
+        except (json.JSONDecodeError, ValidationError):
+            continue
+
+    return ModelResponse(findings=[], confidence=0.0)
 
 
 async def trigger_review(project_id: int, mr_iid: int) -> None:
-    """Run review for given MR (simplified)."""
-    # Normally, fetch MR description and changes via GitLab API.
-    # Here, we use placeholders for tests.
-    description = """---\ntype: feature\nscope: backend\nlanguages: [python]\nrisk_level: low\nbreaking_changes: false\nrelated_issue: ''\n---\n# Summary\nExample\n# Implementation Details\nDetails\n# Testing Plan\nTests\n# Security & Performance\nNone\n# Reviewer Hints\nN/A\n"""
-    ctx = parse_description(description)
-    diff = "@@\n+print('hi')\n"
-    hunks = chunk_diff(diff)
+    """Run review for a given Merge Request."""
+
+    from . import gitlab_client
+
+    mr = await gitlab_client.get_merge_request(project_id, mr_iid)
+    changes = await gitlab_client.get_changes(project_id, mr_iid)
+
+    ctx = parse_description(mr.get("description", ""))
     findings: List[dict] = []
-    for hunk in hunks:
-        prompts = build_prompt(ctx, hunk)
-        resp = await call_model(prompts["system"], prompts["user"])
-        data = validate_json(json.dumps(resp))
-        for f in data.findings:
-            key = dedupe_key(f.file, f.rule_id, f.title, f.start_line)
-            findings.append({**f.model_dump(), "dedupe_key": key})
+
+    for change in changes.get("changes", []):
+        hunks = chunk_diff(change.get("diff", ""))
+        for hunk in hunks:
+            prompts = build_prompt(ctx, hunk)
+            data = await call_model(prompts["system"], prompts["user"])
+            for f in data.findings:
+                key = dedupe_key(f.file, f.rule_id, f.title, f.start_line)
+                findings.append({**f.model_dump(), "dedupe_key": key})
+
     FINDINGS_STORE[(project_id, mr_iid)] = findings
 
 

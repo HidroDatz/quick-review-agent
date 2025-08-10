@@ -12,7 +12,7 @@ uvicorn app.main:app --reload
 ```
 
 ## Environment Variables
-See `.env.example` for required variables.
+See `.env.example` for required variables, including OpenAI configuration.
 
 ## Tests
 

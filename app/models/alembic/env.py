@@ -1,9 +1,16 @@
 from __future__ import annotations
-from sqlalchemy import engine_from_config, pool
-from alembic import context
-from sqlmodel import SQLModel
-from app.models import db_models
-from app.config import settings
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from alembic import context  # noqa: E402
+from sqlalchemy import engine_from_config, pool  # noqa: E402
+from sqlmodel import SQLModel  # noqa: E402
+
+from app.config import settings  # noqa: E402
+from app.models import db_models  # noqa: E402
+
 
 
 config = context.config
