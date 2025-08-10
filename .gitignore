@@ -45,4 +45,6 @@ ENV/
 
 # Other
 *.log
+*.db
+*.db-journal
 

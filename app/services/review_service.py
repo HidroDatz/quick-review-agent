@@ -14,7 +14,6 @@ from ..utils.json_validator import ModelResponse, validate_json
 from .dedupe import dedupe_key
 from ..config import settings
 
-
 FINDINGS_STORE: Dict[Tuple[int, int], List[dict]] = {}
 
 
@@ -80,6 +79,7 @@ async def trigger_review(project_id: int, mr_iid: int) -> None:
         summary = "AI Review: no issues found."
 
     await gitlab_client.post_comment(project_id, mr_iid, summary)
+
     FINDINGS_STORE[(project_id, mr_iid)] = findings
 
 

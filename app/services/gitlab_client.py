@@ -19,7 +19,6 @@ async def get_changes(project_id: int, mr_iid: int) -> dict:
         resp.raise_for_status()
         return resp.json()
 
-
 async def post_comment(project_id: int, mr_iid: int, body: str) -> None:
     """Post a comment to a merge request."""
     url = f"{settings.gitlab_url}/api/v4/projects/{project_id}/merge_requests/{mr_iid}/notes"
