@@ -8,10 +8,10 @@ setup_logging()
 app = FastAPI(title="AI Code Review")
 
 
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
-
 
 app.add_middleware(CorrelationIdMiddleware)
 app.include_router(webhooks.router)

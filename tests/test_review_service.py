@@ -82,7 +82,14 @@ async def test_trigger_review_stores_findings(monkeypatch):
     monkeypatch.setattr(review_service, "call_model", fake_call_model)
     monkeypatch.setattr(gitlab_client, "get_merge_request", fake_get_merge_request)
     monkeypatch.setattr(gitlab_client, "get_changes", fake_get_changes)
+    comments: list[str] = []
+
+    async def fake_post_comment(project_id, mr_iid, body):
+        comments.append(body)
+
+    monkeypatch.setattr(gitlab_client, "post_comment", fake_post_comment)
 
     await review_service.trigger_review(1, 2)
     findings = await review_service.get_current_findings(1, 2)
     assert findings and findings[0]["file"] == "a.py"
+    assert comments and "AI Review Findings" in comments[0]

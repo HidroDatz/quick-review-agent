@@ -69,6 +69,17 @@ async def trigger_review(project_id: int, mr_iid: int) -> None:
                 key = dedupe_key(f.file, f.rule_id, f.title, f.start_line)
                 findings.append({**f.model_dump(), "dedupe_key": key})
 
+    if findings:
+        lines = [
+            f"- {f['severity'].upper()}: {f['file']}:{f['start_line']} {f['title']}"
+            for f in findings
+        ]
+        summary = "AI Review Findings:\n" + "\n".join(lines)
+    else:
+        summary = "AI Review: no issues found."
+
+    await gitlab_client.post_comment(project_id, mr_iid, summary)
+
     FINDINGS_STORE[(project_id, mr_iid)] = findings
 
 
