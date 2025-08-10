@@ -105,7 +105,7 @@ def upgrade() -> None:
                     )
     op.create_table('mrmetrics',
                     sa.Column('mr_id', sa.Integer(), nullable=False),
-                    sa.Column('snapshot_id', sa.Intaeger(), nullable=False),
+                    sa.Column('snapshot_id', sa.Integer(), nullable=False),
                     sa.Column('counts_by_severity', sa.JSON(), nullable=True),
                     sa.Column('counts_by_category', sa.JSON(), nullable=True),
                     sa.Column('open_count', sa.Integer(), nullable=False),

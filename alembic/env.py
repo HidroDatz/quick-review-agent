@@ -34,7 +34,10 @@ target_metadata = SQLModel.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-config.set_main_option("sqlalchemy.url", os.environ.get("DATABASE_URL"))
+database_url = os.environ.get("DATABASE_URL", "sqlite:///./prod.db")
+if database_url is None:
+    raise ValueError("DATABASE_URL environment variable is not set")
+config.set_main_option("sqlalchemy.url", database_url)
 
 
 def run_migrations_offline() -> None:
